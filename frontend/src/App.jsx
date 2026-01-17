@@ -61,6 +61,38 @@ function App() {
     carregarTransacoes()
   }
 
+  // --- FUNÇÃO DE EXPORTAR CSV ---
+  // --- FUNÇÃO DE EXPORTAR CSV (Versão Excel Brasil) ---
+  const exportarRelatorio = () => {
+    if (transacoes.length === 0) return alert("Sem dados para exportar.")
+
+    // 1. Cabeçalho usando PONTO E VÍRGULA (;)
+    const headers = ["ID;Descrição;Valor;Tipo;Categoria;Data"]
+
+    // 2. Dados
+    const rows = transacoes.map(t => {
+      const dataFormatada = new Date().toLocaleDateString('pt-BR')
+      
+      // Ajuste fino: Trocamos o ponto do decimal por vírgula para o Excel entender como número
+      const valorFormatado = t.valor.toString().replace('.', ',')
+
+      return `${t.id};"${t.descricao}";${valorFormatado};${t.tipo};${t.categoria};${dataFormatada}`
+    })
+
+    // 3. Adiciona o BOM (\uFEFF) para o Excel entender acentos (UTF-8)
+    const csvContent = "\uFEFF" + [headers, ...rows].join("\n")
+
+    // 4. Download
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.setAttribute('download', 'finance_flow_relatorio.csv')
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
+
   // Cálculos
   const receitas = transacoes.filter(t => t.tipo === 'receita').reduce((acc, t) => acc + t.valor, 0)
   const despesas = transacoes.filter(t => t.tipo === 'despesa').reduce((acc, t) => acc + t.valor, 0)
@@ -106,9 +138,9 @@ function App() {
         <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px' }}>
           <div>
             <h2 style={{ fontSize: '1.8rem', fontWeight: '700', color: THEME.colors.text.primary, marginBottom: '5px' }}>Visão Geral</h2>
-            <p style={{ color: THEME.colors.text.secondary }}>Olá, Gustavo 👋 Aqui está o resumo das suas finanças.</p>
+            <p style={{ color: THEME.colors.text.secondary }}>Olá, aqui está o resumo das suas finanças.</p>
           </div>
-          <button style={styles.primaryButton}>
+          <button onClick={exportarRelatorio} style={styles.primaryButton}>
             Exportar Relatório
           </button>
         </header>
